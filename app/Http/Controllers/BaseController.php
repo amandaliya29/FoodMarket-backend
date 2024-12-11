@@ -17,21 +17,21 @@ class BaseController extends Controller
         return RequestFacades::root() . "/" . "storage" . "/" . $file;
     }
 
-    public function sendSuccess($data = [], $messages, $code = 200)
+    public function sendSuccess($data = [], $message, $code = 200)
     {
         $obj = [
             'status' => true,
             'data' => $data,
-            'messages' => $messages
+            'message' => $message
         ];
         return response()->json($obj, $code);
     }
 
-    public function sendError($messages, $code = 404)
+    public function sendError($message, $code = 404)
     {
         $obj = [
             'status' => false,
-            'messages' => $messages
+            'message' => $message
         ];
         return response()->json($obj, $code);
     }

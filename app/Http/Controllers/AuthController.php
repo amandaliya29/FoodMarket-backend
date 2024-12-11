@@ -47,7 +47,7 @@ class AuthController extends BaseController
 
             return $this->sendSuccess(['user' => $user, 'token' => $token], "User Added Successfully");
         } catch (\Throwable $th) {
-            return $this->sendError($th->getMessage(), 500);
+            return $this->sendError("Server Error", 500);
         }
     }
 
@@ -70,7 +70,7 @@ class AuthController extends BaseController
 
             if ($user && Hash::check($request->password, $user->password)) {
                 $token = $user->createToken('user-token')->plainTextToken;
-                return $this->sendSuccess(['user' => $user, 'token' => $token], "Login Successful");
+                return $this->sendSuccess(['user' => $user, 'token' => $token], "Login Successfully");
             }
 
             // wrong credentials
@@ -85,7 +85,7 @@ class AuthController extends BaseController
     {
         try {
             auth()->user()->currentAccessToken()->delete();
-            return $this->sendSuccess([], "Logout Successful");
+            return $this->sendSuccess([], "Logout Successfully", 200);
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
         }
