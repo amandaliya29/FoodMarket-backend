@@ -10,11 +10,7 @@ class BaseController extends Controller
 {
     public function upload($folder = 'images', $key = 'avatar')
     {
-        $file = null;
-        if (request()->hasFile($key)) {
-            $file = Storage::disk('public')->putFile($folder, request()->file($key), 'public');
-        }
-        return RequestFacades::root() . "/" . "storage" . "/" . $file;
+        return Storage::disk('public')->putFile($folder, request()->file($key), 'public');
     }
 
     public function sendSuccess($data = [], $message, $code = 200)

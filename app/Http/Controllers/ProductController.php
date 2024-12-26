@@ -59,6 +59,7 @@ class ProductController extends BaseController
             $product->description = $request->description;
             $product->price = $request->price;
             $product->image = $request->image;
+            $product->ingredients = $request->ingredients;
 
             if ($request->stock) {
                 $product->stock = $request->stock;
@@ -72,7 +73,7 @@ class ProductController extends BaseController
 
             return $this->sendSuccess([], "Product details saved successfully.");
         } catch (\Throwable $th) {
-            return $this->sendError("Server Error", 500);
+            return $this->sendError($th->getMessage(), 500);
         }
     }
 

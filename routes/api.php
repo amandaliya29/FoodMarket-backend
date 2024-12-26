@@ -12,7 +12,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('logout', 'logout');
 
-        Route::middleware([ProductController::class])->prefix('product')->group(function () {
+        Route::controller(ProductController::class)->prefix('product')->group(function () {
             Route::get('list', 'list');
             Route::get('get/{id}', 'get');
             Route::post('save', 'save');
@@ -20,4 +20,8 @@ Route::controller(AuthController::class)->group(function () {
             Route::delete('delete/{id}', 'delete');
         });
     });
+});
+
+Route::get('check', function () {
+    return \Illuminate\Support\Facades\Request::root();
 });

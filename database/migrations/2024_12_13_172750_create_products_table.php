@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->decimal('price', 10, 2);
             $table->decimal('rate', 2, 1)->default(0)->check('rate <= 5');
             $table->integer('stock')->default(0);
-            $table->string('is_active')->default(1);
+            $table->integer('is_active')->default(value: 1);
             $table->boolean('is_hot')->default(0);
             $table->timestamps();
         });
