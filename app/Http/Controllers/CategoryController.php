@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class ProductController extends BaseController
+class CategoryController extends BaseController
 {
     public function list()
     {
         try {
-            $product = Product::with('category')->get();
-            return $this->sendSuccess($product, "Products get successfully.");
+            $category = Category::with('products')->get();
+            return $this->sendSuccess($category, "Categories get successfully.");
         } catch (\Throwable $th) {
-            return $th->getMessage();
             return $this->sendError("Server Error", 500);
         }
     }
@@ -23,13 +22,13 @@ class ProductController extends BaseController
     public function get($id)
     {
         try {
-            $product = Product::with('category')->find($id);
+            $category = Category::with('products')->find($id);
 
-            if (!$product) {
-                return $this->sendError("Product not found", 404);
+            if (!$category) {
+                return $this->sendError("Category not found", 404);
             }
 
-            return $this->sendSuccess($product, "Product get successfully.");
+            return $this->sendSuccess($category, "Category get successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
         }
@@ -43,13 +42,11 @@ class ProductController extends BaseController
             if (!$user->is_admin) {
                 return $this->sendError("Unauthorized", 401);
             }
-
+            
             // validation
             $validation = Validator::make($request->all(), [
                 'name' => 'required',
-                'description' => 'required|min:150',
                 'image' => 'required|string',
-                'price' => 'required|numeric',
             ]);
 
             // validation error
@@ -58,29 +55,18 @@ class ProductController extends BaseController
             }
 
             if ($request->id) {
-                $product = Product::find($request->id);
+                $category = Category::find($request->id);
             } else {
-                $product = new Product();
-                $product->category_id = $request->category_id;
+                $category = new Category();
             }
 
-            $product->name = $request->name;
-            $product->description = $request->description;
-            $product->price = $request->price;
-            $product->image = $request->image;
-            $product->ingredients = $request->ingredients;
+            $category->name = $request->name;
+            $category->description = $request->description;
+            $category->image = $request->image;
 
-            if ($request->stock) {
-                $product->stock = $request->stock;
-            }
+            $category->save();
 
-            if ($request->is_hot) {
-                $product->is_hot = $request->is_hot;
-            }
-
-            $product->save();
-
-            return $this->sendSuccess($product->load('category'), "Product details saved successfully.");
+            return $this->sendSuccess($category, "Category details saved successfully.");
         } catch (\Throwable $th) {
             return $this->sendError($th->getMessage(), 500);
         }
@@ -105,7 +91,7 @@ class ProductController extends BaseController
                 return $this->sendError("Validation Error", 403);
             }
 
-            $url = $this->upload('products', 'image');
+            $url = $this->upload('categories', 'image');
             return $this->sendSuccess(['url' => $url], "Media uploaded successfully.");
 
         } catch (\Throwable $th) {
@@ -122,14 +108,14 @@ class ProductController extends BaseController
                 return $this->sendError("Unauthorized", 401);
             }
             
-            $product = Product::find($id);
+            $category = Category::find($id);
 
-            if (!$product) {
-                return $this->sendError("Product not found", 404);
+            if (!$category) {
+                return $this->sendError("Category not found", 404);
             }
 
-            $product->delete();
-            return $this->sendSuccess([], "Product removed successfully.");
+            $category->delete();
+            return $this->sendSuccess([], "Category removed successfully.");
 
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
