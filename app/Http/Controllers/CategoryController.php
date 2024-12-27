@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends BaseController
@@ -11,7 +12,7 @@ class CategoryController extends BaseController
     public function list()
     {
         try {
-            $category = Category::all();
+            $category = Category::with('products')->get();
             return $this->sendSuccess($category, "Categories get successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
@@ -21,7 +22,7 @@ class CategoryController extends BaseController
     public function get($id)
     {
         try {
-            $category = Category::find($id);
+            $category = Category::with('products')->find($id);
 
             if (!$category) {
                 return $this->sendError("Category not found", 404);
@@ -36,6 +37,12 @@ class CategoryController extends BaseController
     public function save(Request $request)
     {
         try {
+            // check is admin
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                return $this->sendError("Unauthorized", 401);
+            }
+            
             // validation
             $validation = Validator::make($request->all(), [
                 'name' => 'required',
@@ -59,7 +66,7 @@ class CategoryController extends BaseController
 
             $category->save();
 
-            return $this->sendSuccess([], "Category details saved successfully.");
+            return $this->sendSuccess($category, "Category details saved successfully.");
         } catch (\Throwable $th) {
             return $this->sendError($th->getMessage(), 500);
         }
@@ -68,6 +75,13 @@ class CategoryController extends BaseController
     public function media(Request $request)
     {
         try {
+            // check is admin
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                return $this->sendError("Unauthorized", 401);
+            }
+
+            // validation
             $validation = Validator::make($request->all(), [
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5096',
             ]);
@@ -88,6 +102,12 @@ class CategoryController extends BaseController
     public function delete($id)
     {
         try {
+            // check is admin
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                return $this->sendError("Unauthorized", 401);
+            }
+            
             $category = Category::find($id);
 
             if (!$category) {

@@ -21,4 +21,8 @@ class Product extends Model
     {
         $this->attributes['ingredients'] = $value ? implode(',', $value) : null;
     }
+
+    public function category() {
+        return $this->hasOne(Category::class, 'id', 'category_id');
+    }
 }

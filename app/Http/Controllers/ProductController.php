@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends BaseController
@@ -11,9 +12,10 @@ class ProductController extends BaseController
     public function list()
     {
         try {
-            $product = Product::all();
+            $product = Product::with('category')->get();
             return $this->sendSuccess($product, "Products get successfully.");
         } catch (\Throwable $th) {
+            return $th->getMessage();
             return $this->sendError("Server Error", 500);
         }
     }
@@ -21,7 +23,7 @@ class ProductController extends BaseController
     public function get($id)
     {
         try {
-            $product = Product::find($id);
+            $product = Product::with('category')->find($id);
 
             if (!$product) {
                 return $this->sendError("Product not found", 404);
@@ -36,6 +38,12 @@ class ProductController extends BaseController
     public function save(Request $request)
     {
         try {
+            // check is admin
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                return $this->sendError("Unauthorized", 401);
+            }
+
             // validation
             $validation = Validator::make($request->all(), [
                 'name' => 'required',
@@ -53,6 +61,7 @@ class ProductController extends BaseController
                 $product = Product::find($request->id);
             } else {
                 $product = new Product();
+                $product->category_id = $request->category_id;
             }
 
             $product->name = $request->name;
@@ -71,7 +80,7 @@ class ProductController extends BaseController
 
             $product->save();
 
-            return $this->sendSuccess([], "Product details saved successfully.");
+            return $this->sendSuccess($product->load('category'), "Product details saved successfully.");
         } catch (\Throwable $th) {
             return $this->sendError($th->getMessage(), 500);
         }
@@ -80,6 +89,13 @@ class ProductController extends BaseController
     public function media(Request $request)
     {
         try {
+            // check is admin
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                return $this->sendError("Unauthorized", 401);
+            }
+
+            // validation
             $validation = Validator::make($request->all(), [
                 'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5096',
             ]);
@@ -100,6 +116,12 @@ class ProductController extends BaseController
     public function delete($id)
     {
         try {
+            // check is admin
+            $user = Auth::user();
+            if (!$user->is_admin) {
+                return $this->sendError("Unauthorized", 401);
+            }
+            
             $product = Product::find($id);
 
             if (!$product) {
