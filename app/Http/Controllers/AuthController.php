@@ -163,22 +163,23 @@ class AuthController extends BaseController
 
     public function resetPassword(Request $request, $token)
     {
+        // validation
+        $request->validate([
+            'password' => 'required|min:8',
+            'confirm_password' => 'required|same:password',
+        ]);
+        
         try {
-
-            // validation
-            $validation = Validator::make($request->all(), [
-                'password' => 'required|confirmed',
-            ]);
-
-            // validation error
-            if ($validation->fails()) {
-                return $this->sendError("Validation Error", 403);
-            }
 
             $resetPassword = PasswordResetToken::where('token', $token)->first();
 
             if (!$resetPassword) {
-                return $this->sendError("Token is Invalid or Expired", 498);
+                return view('reset-password', [
+                    'message' => 'Token is Invalid or Expired', 
+                    'text' => 'The token you provided is either invalid or has expired. Please try again',
+                    'status' => false
+                ]);
+                // return $this->sendError("Token is Invalid or Expired", 498);
             }
 
             // change password
@@ -189,9 +190,19 @@ class AuthController extends BaseController
             // delete token
             PasswordResetToken::where('email', $resetPassword->email)->delete();
 
-            return $this->sendSuccess([], "Password Changed Successfully");
+            // return $this->sendSuccess([], "Password Changed Successfully");
+            return view('reset-password', [
+                'message' => 'Password Changed Successfully',
+                'text' => 'Please open the application and try logging in using the new password.',
+                'status' => true
+            ]);
         } catch (\Throwable $th) {
-            return $this->sendError("Internal Server Error", 500);
+            // return $this->sendError("Internal Server Error", 500);
+            return view('reset-password', [
+                'message' => 'Internal Server Error',
+                'text' => 'An internal server error was detected. Please try again.',
+                'status' => false
+            ]);
         }
     }
 }
