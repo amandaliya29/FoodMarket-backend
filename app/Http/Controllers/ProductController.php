@@ -68,14 +68,17 @@ class ProductController extends BaseController
             $product->description = $request->description;
             $product->price = $request->price;
             $product->image = $request->image;
-            $product->ingredients = $request->ingredients;
+            $product->is_hot = $request->is_hot;
+            $product->is_active = $request->is_active;
+
+            if (is_string($request->ingredients)) {
+                $product->ingredients = explode(',', $request->ingredients);
+            } else {
+                $product->ingredients = $request->ingredients;
+            }
 
             if ($request->stock) {
                 $product->stock = $request->stock;
-            }
-
-            if ($request->is_hot) {
-                $product->is_hot = $request->is_hot;
             }
 
             $product->save();
@@ -121,7 +124,7 @@ class ProductController extends BaseController
             if (!$user->is_admin) {
                 return $this->sendError("Unauthorized", 401);
             }
-            
+
             $product = Product::find($id);
 
             if (!$product) {
