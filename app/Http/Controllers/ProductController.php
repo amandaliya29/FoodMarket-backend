@@ -9,13 +9,21 @@ use Illuminate\Support\Facades\Validator;
 
 class ProductController extends BaseController
 {
-    public function list()
+    public function list(Request $request)
     {
         try {
-            $product = Product::with('category')->get();
-            return $this->sendSuccess($product, "Products get successfully.");
+            $query = Product::where('is_active', 1)->with('category');
+
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('description', 'LIKE', "%{$search}%");
+            }
+
+            $products = $query->get();
+
+            return $this->sendSuccess($products, "Products retrieved successfully.");
         } catch (\Throwable $th) {
-            return $th->getMessage();
             return $this->sendError("Server Error", 500);
         }
     }
@@ -68,8 +76,9 @@ class ProductController extends BaseController
             $product->description = $request->description;
             $product->price = $request->price;
             $product->image = $request->image;
-            $product->is_hot = $request->is_hot;
-            $product->is_active = $request->is_active;
+            $product->is_hot = (bool) $request->is_hot;
+            $product->is_active = (bool) $request->is_active;
+            $product->is_offer = (bool) $request->is_offer;
 
             if (is_string($request->ingredients)) {
                 $product->ingredients = explode(',', $request->ingredients);
@@ -81,11 +90,16 @@ class ProductController extends BaseController
                 $product->stock = $request->stock;
             }
 
+            if($request->is_offer) {
+                $product->offer_percentage = number_format((float) $request->offer_percentage, 2, '.', '');;
+                $product->offer_text = $request->offer_text;
+            }
+
             $product->save();
 
             return $this->sendSuccess($product->load('category'), "Product details saved successfully.");
         } catch (\Throwable $th) {
-            return $this->sendError($th->getMessage(), 500);
+            return $this->sendError("Server Error", 500);
         }
     }
 

@@ -156,7 +156,6 @@ class AuthController extends BaseController
 
             return $this->sendSuccess([], "Password Reset Email Sent... Please Check Your Email");
         } catch (\Throwable $th) {
-            return $th->getMessage();
             return $this->sendError("Internal Server Error", 500);
         }
     }

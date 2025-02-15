@@ -6,6 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::deleting(function ($product) {
+            $product->offers()->detach();
+        });
+    }
+
     /**
      * Accessor: Convert the comma-separated string into an array when retrieving.
      */
@@ -24,5 +33,10 @@ class Product extends Model
 
     public function category() {
         return $this->hasOne(Category::class, 'id', 'category_id');
+    }
+
+    public function offers()
+    {
+        return $this->belongsToMany(Offer::class, 'offer_product');
     }
 }
