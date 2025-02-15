@@ -2,33 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Models\Offer;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class CategoryController extends BaseController
+class OfferController extends BaseController
 {
     public function list()
     {
         try {
-            $category = Category::with('products')->get();
-            return $this->sendSuccess($category, "Categories get successfully.");
+            $offer = Offer::where('is_active', 1)->get();
+            return $this->sendSuccess($offer, "Offeres get successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
         }
     }
 
-    public function get($id)
+    public function get($id = null)
     {
         try {
-            $category = Category::with('products')->find($id);
+            $offer = Offer::with('products')->find($id);
 
-            if (!$category) {
-                return $this->sendError("Category not found", 404);
+            if (!$offer) {
+                $products = Product::where('is_offer', 1)->orderBy('created_at', 'desc')->get();
+                return $this->sendSuccess($products, "Offeres get successfully.");
             }
 
-            return $this->sendSuccess($category, "Category get successfully.");
+            return $this->sendSuccess($offer, "Offer get successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
         }
@@ -42,11 +44,11 @@ class CategoryController extends BaseController
             if (!$user->is_admin) {
                 return $this->sendError("Unauthorized", 401);
             }
-            
+
             // validation
             $validation = Validator::make($request->all(), [
-                'name' => 'required',
                 'image' => 'required|string',
+                'product_ids' => 'required|array',
             ]);
 
             // validation error
@@ -54,19 +56,14 @@ class CategoryController extends BaseController
                 return $this->sendError("Validation Error", 403);
             }
 
-            if ($request->id) {
-                $category = Category::find($request->id);
-            } else {
-                $category = new Category();
-            }
+            $offer = Offer::findOrNew($request->id);
+            $offer->banner = $request->image;
+            $offer->is_active = (bool) $request->is_active;
+            $offer->save();
 
-            $category->name = $request->name;
-            $category->description = $request->description;
-            $category->image = $request->image;
+            $offer->products()->sync($request->product_ids);
 
-            $category->save();
-
-            return $this->sendSuccess($category, "Category details saved successfully.");
+            return $this->sendSuccess($offer, "Offer details saved successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
         }
@@ -91,7 +88,7 @@ class CategoryController extends BaseController
                 return $this->sendError("Validation Error", 403);
             }
 
-            $url = $this->upload('categories', 'image');
+            $url = $this->upload('offer_banner', 'image');
             return $this->sendSuccess(['url' => $url], "Media uploaded successfully.");
 
         } catch (\Throwable $th) {
@@ -107,15 +104,15 @@ class CategoryController extends BaseController
             if (!$user->is_admin) {
                 return $this->sendError("Unauthorized", 401);
             }
-            
-            $category = Category::find($id);
 
-            if (!$category) {
-                return $this->sendError("Category not found", 404);
+            $offer = Offer::find($id);
+
+            if (!$offer) {
+                return $this->sendError("Offer not found", 404);
             }
 
-            $category->delete();
-            return $this->sendSuccess([], "Category removed successfully.");
+            $offer->delete();
+            return $this->sendSuccess([], "Offer removed successfully.");
 
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
