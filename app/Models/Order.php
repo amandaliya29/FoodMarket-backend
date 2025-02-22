@@ -10,4 +10,9 @@ class Order extends Model
     {
         return $this->belongsToMany(Product::class, 'product_order');
     }
+
+    public function receipt()
+    {
+        return $this->hasOne(Receipt::class, 'id', 'receipts_id');
+    }
 }

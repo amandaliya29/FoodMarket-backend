@@ -45,4 +45,4 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 });
 
-Route::post('/order/save', [OrderContoller::class, 'save']);
+Route::post('/order/webhooks', [OrderContoller::class, 'webhooks']);

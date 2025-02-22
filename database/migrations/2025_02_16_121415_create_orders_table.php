@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('receipts_id')->nullable();
             $table->enum('payment_type', ['cash', 'online'])->default('cash');
-            $table->enum('payment_status', ['pending', 'failed', 'success'])->default('pending');
+            $table->enum('payment_status', ['pending', 'failed', 'success', 'refund'])->default('pending');
             $table->string('method', 50)->nullable();
             $table->string('payment_id', 100)->nullable();
             $table->string('card_id', 50)->nullable();
