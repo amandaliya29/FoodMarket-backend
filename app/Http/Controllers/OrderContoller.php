@@ -24,7 +24,7 @@ class OrderContoller extends BaseController
                 return $this->sendError("Unauthorized", 401);
             }
 
-            $query = Order::with(['products', 'receipt']);
+            $query = Order::with(['products', 'receipt'])->latest();
 
             if ($request->has('search')) {
                 $search = $request->input('search');
@@ -32,6 +32,26 @@ class OrderContoller extends BaseController
             }
 
             $order = $query->get();
+            return $this->sendSuccess($order, "Order retrieved successfully.");
+        } catch (\Throwable $th) {
+            return $this->sendError("Server Error", 500);
+        }
+    }
+
+    public function get($id){
+        try {
+            // check is admin
+            $user = Auth::user();
+            $order = Order::with(['products', 'receipt'])->find($id);
+
+            if (!$user->is_admin && $user->id != $order->user_id) {
+                return $this->sendError("Unauthorized", 401);
+            }
+
+            if (!$order) {
+                return $this->sendError("Order not found", 404);
+            }
+
             return $this->sendSuccess($order, "Order retrieved successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
@@ -222,20 +242,23 @@ class OrderContoller extends BaseController
         }
     }
 
-    // public function pastOrder(Request $request)
-    // {
-    //     try {
-    //         $query = Order::with(['products', 'receipt']);
+    public function pastOrder()
+    {
+        try {
+            $order = Order::with(['products', 'receipt'])->where('user_id', Auth::id())->whereIn('status', ['delivered', 'cancelled'])->latest()->get();
+            return $this->sendSuccess($order, "Past order retrieved successfully.");
+        } catch (\Throwable $th) {
+            return $this->sendError("Server Error", 500);
+        }
+    }
 
-    //         if ($request->has('search')) {
-    //             $search = $request->input('search');
-    //             $query->where('status', 'LIKE', "%{$search}%");
-    //         }
-
-    //         $order = $query->get();
-    //         return $this->sendSuccess($order, "Order retrieved successfully.");
-    //     } catch (\Throwable $th) {
-    //         return $this->sendError("Server Error", 500);
-    //     }
-    // }
+    public function inprogressOrder()
+    {
+        try {
+            $order = Order::with(['products', 'receipt'])->where('user_id', Auth::id())->whereNotIn('status', ['delivered', 'cancelled'])->latest()->get();
+            return $this->sendSuccess($order, "In progress order retrieved successfully.");
+        } catch (\Throwable $th) {
+            return $this->sendError("Server Error", 500);
+        }
+    }
 }
