@@ -3,8 +3,8 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OfferController;
+use App\Http\Controllers\OrderContoller;
 use App\Http\Controllers\ProductController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(AuthController::class)->group(function () {
@@ -43,4 +43,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('upload', 'media');
         Route::delete('delete/{id}', 'delete');
     });
+
+    Route::controller(OrderContoller::class)->prefix('order')->group(function () {
+        Route::get('list', 'list');
+        Route::get('get/{id?}', 'get');
+        Route::post('create', 'create');
+        Route::post('cash-order', 'cash');
+        Route::post('cancel', 'cancel');
+        Route::post('status', 'status');
+        Route::get('past-order', 'pastOrder');
+        Route::get('inprogress-order', 'inprogressOrder');
+    });
 });
+
+Route::post('/order/webhooks', [OrderContoller::class, 'webhooks']);
