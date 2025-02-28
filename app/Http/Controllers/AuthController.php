@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Request as FacadesRequest;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends BaseController
 {
@@ -24,6 +25,7 @@ class AuthController extends BaseController
                 'name' => 'required',
                 'email' => 'required|email',
                 'password' => 'required|string|min:8|confirmed',
+                'phone_no' => 'required|digits:10|numeric',
             ]);
 
             // validation error
@@ -40,6 +42,7 @@ class AuthController extends BaseController
             $user->name = $request->name;
             $user->email = $request->email;
             $user->password = $request->password;
+            $user->phone_no = $request->phone_no;
 
             if ($request->hasFile('avatar')) {
                 $avatar_url = $this->upload('avatar', 'avatar');
@@ -202,6 +205,64 @@ class AuthController extends BaseController
                 'text' => 'An internal server error was detected. Please try again.',
                 'status' => false
             ]);
+        }
+    }
+
+    public function profile(Request $request)
+    {
+        try {
+            // validation
+            $validation = Validator::make($request->all(), [
+                'name' => 'required',
+                'phone_no' => 'required|digits:10|numeric',
+            ]);
+
+            // validation error
+            if ($validation->fails()) {
+                return $this->sendError("Validation Error", 403);
+            }
+
+            $user = User::findOrFail(Auth::id());
+            $user->name = $request->name;
+            $user->phone_no = $request->phone_no;
+
+            if ($request->hasFile('avatar')) {
+                $avatar_url = $this->upload('avatar', 'avatar');
+                $user->avatar = $avatar_url;
+            }
+
+            $user->save();
+
+            return $this->sendSuccess($user, "Profile updated successfully.");
+        } catch (\Throwable $th) {
+            return $this->sendError("Internal Server Error", 500);
+        }
+    }
+
+    public function address(Request $request)
+    {
+        try {
+            // validation
+            $validation = Validator::make($request->all(), [
+                'house_no' => 'required',
+                'address' => 'required',
+                'city' => 'required',
+            ]);
+
+            // validation error
+            if ($validation->fails()) {
+                return $this->sendError("Validation Error", 403);
+            }
+
+            $user = User::find(Auth::id());
+            $user->house_no = $request->house_no;
+            $user->address = $request->address;
+            $user->city = $request->city;
+            $user->save();
+
+            return $this->sendSuccess($user, "Address updated successfully.");
+        } catch (\Throwable $th) {
+            return $this->sendError("Internal Server Error", 500);
         }
     }
 }

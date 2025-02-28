@@ -18,6 +18,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::get('logout', 'logout');
         Route::post('change-password', 'changePassword');
+        Route::post('profile', 'profile');
+        Route::post('address', 'address');
     });
 
     Route::controller(ProductController::class)->prefix('product')->group(function () {
