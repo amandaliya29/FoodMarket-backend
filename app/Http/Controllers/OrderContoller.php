@@ -24,7 +24,7 @@ class OrderContoller extends BaseController
                 return $this->sendError("Unauthorized", 401);
             }
 
-            $query = Order::with(['products', 'receipt'])->latest();
+            $query = Order::with(['products', 'receipt', 'user'])->latest();
 
             if ($request->has('search')) {
                 $search = $request->input('search');
@@ -42,7 +42,7 @@ class OrderContoller extends BaseController
         try {
             // check is admin
             $user = Auth::user();
-            $order = Order::with(['products', 'receipt'])->find($id);
+            $order = Order::with(['products', 'receipt', 'user'])->find($id);
 
             if (!$user->is_admin && $user->id != $order->user_id) {
                 return $this->sendError("Unauthorized", 401);
@@ -75,13 +75,26 @@ class OrderContoller extends BaseController
             }
 
             $user = Auth::user();
-            $order = Order::create(['user_id' => $user->id]);
+
+            $order = new Order;
+            $order->user_id = $user->id;
+            $order->house_no = (string) $request->house_no; 
+            $order->address = (string) $request->address; 
+            $order->city = (string) $request->city; 
+            $order->save();
 
             $order->products()->attach($request->product_ids);
             
             $receipt = new Receipt(); 
             $receipt->order_id = $order->id; 
-            $amount = Product::whereIn('id', $request->product_ids)->sum('price');
+
+            $products = Product::whereIn('id', $request->product_ids)->get();
+            $amount = 0;
+
+            foreach ($request->product_ids as $id) {
+                $amount += $products->firstWhere('id', $id)->price ?? 0;
+            }
+
             $receipt->amount = $amount; 
             $receipt->gst = (int) $request->gst; 
             $receipt->delivery_charges = (int) $request->delivery_charges; 
@@ -248,7 +261,7 @@ class OrderContoller extends BaseController
     public function pastOrder()
     {
         try {
-            $order = Order::with(['products', 'receipt'])->where('user_id', Auth::id())->whereIn('status', ['delivered', 'cancelled'])->latest()->get();
+            $order = Order::with(['products', 'receipt', 'user'])->where('user_id', Auth::id())->whereIn('status', ['delivered', 'cancelled'])->latest()->get();
             return $this->sendSuccess($order, "Past order retrieved successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
@@ -258,7 +271,7 @@ class OrderContoller extends BaseController
     public function inprogressOrder()
     {
         try {
-            $order = Order::with(['products', 'receipt'])->where('user_id', Auth::id())->whereNotIn('status', ['delivered', 'cancelled'])->latest()->get();
+            $order = Order::with(['products', 'receipt', 'user'])->where('user_id', Auth::id())->whereNotIn('status', ['delivered', 'cancelled'])->latest()->get();
             return $this->sendSuccess($order, "In progress order retrieved successfully.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
