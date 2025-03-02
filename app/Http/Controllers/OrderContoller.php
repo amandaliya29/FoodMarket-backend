@@ -99,6 +99,9 @@ class OrderContoller extends BaseController
             $receipt->gst = (int) $request->gst; 
             $receipt->delivery_charges = (int) $request->delivery_charges; 
             $receipt->discount_applied = (int) $request->discount_applied; 
+            $receipt->house_no = (string) $request->house_no; 
+            $receipt->address = (string) $request->address; 
+            $receipt->city = (string) $request->city; 
             $receipt->save();
             $order->receipts_id = $receipt->id;
             $order->save();
