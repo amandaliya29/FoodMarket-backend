@@ -15,4 +15,9 @@ class Order extends Model
     {
         return $this->hasOne(Receipt::class, 'id', 'receipts_id');
     }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }
