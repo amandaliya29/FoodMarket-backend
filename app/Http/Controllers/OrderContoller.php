@@ -38,7 +38,8 @@ class OrderContoller extends BaseController
         }
     }
 
-    public function get($id){
+    public function get($id)
+    {
         try {
             // check is admin
             $user = Auth::user();
@@ -68,7 +69,7 @@ class OrderContoller extends BaseController
                 'delivery_charges' => 'nullable|numeric',
                 'discount_applied' => 'nullable|numeric',
             ]);
-            
+
             // validation error
             if ($validation->fails()) {
                 return $this->sendError("Validation Error", 403);
@@ -78,15 +79,15 @@ class OrderContoller extends BaseController
 
             $order = new Order;
             $order->user_id = $user->id;
-            $order->house_no = (string) $request->house_no; 
-            $order->address = (string) $request->address; 
-            $order->city = (string) $request->city; 
+            $order->house_no = (string) $request->house_no;
+            $order->address = (string) $request->address;
+            $order->city = (string) $request->city;
             $order->save();
 
             $order->products()->attach($request->product_ids);
-            
-            $receipt = new Receipt(); 
-            $receipt->order_id = $order->id; 
+
+            $receipt = new Receipt();
+            $receipt->order_id = $order->id;
 
             $products = Product::whereIn('id', $request->product_ids)->get();
             $amount = 0;
@@ -95,13 +96,10 @@ class OrderContoller extends BaseController
                 $amount += $products->firstWhere('id', $id)->price ?? 0;
             }
 
-            $receipt->amount = $amount; 
-            $receipt->gst = (int) $request->gst; 
-            $receipt->delivery_charges = (int) $request->delivery_charges; 
-            $receipt->discount_applied = (int) $request->discount_applied; 
-            $receipt->house_no = (string) $request->house_no; 
-            $receipt->address = (string) $request->address; 
-            $receipt->city = (string) $request->city; 
+            $receipt->amount = $amount;
+            $receipt->gst = (int) $request->gst;
+            $receipt->delivery_charges = (int) $request->delivery_charges;
+            $receipt->discount_applied = (int) $request->discount_applied;
             $receipt->save();
             $order->receipts_id = $receipt->id;
             $order->save();
@@ -114,7 +112,7 @@ class OrderContoller extends BaseController
 
     public function webhooks(Request $request)
     {
-        try{
+        try {
             $data = $request->all();
 
             $webhookSecret = Config::get('razorpay.webhooks.secret');
@@ -151,13 +149,14 @@ class OrderContoller extends BaseController
         }
     }
 
-    public function cash(Request $request) {
+    public function cash(Request $request)
+    {
         try {
             // validation
             $validation = Validator::make($request->all(), [
                 'order_id' => 'required|numeric',
             ]);
-            
+
             // validation error
             if ($validation->fails()) {
                 return $this->sendError("Validation Error", 403);
@@ -177,7 +176,8 @@ class OrderContoller extends BaseController
         }
     }
 
-    public function cancel(Request $request){
+    public function cancel(Request $request)
+    {
         try {
             // check is admin
             $user = Auth::user();
@@ -189,7 +189,7 @@ class OrderContoller extends BaseController
             $validation = Validator::make($request->all(), [
                 'order_id' => 'required|numeric',
             ]);
-            
+
             // validation error
             if ($validation->fails()) {
                 return $this->sendError("Validation Error", 403);
@@ -217,7 +217,8 @@ class OrderContoller extends BaseController
         }
     }
 
-    public function status(Request $request){
+    public function status(Request $request)
+    {
         try {
             // check is admin
             $user = Auth::user();
@@ -230,7 +231,7 @@ class OrderContoller extends BaseController
                 'order_id' => 'required|numeric',
                 'status' => 'required|string',
             ]);
-            
+
             // validation error
             if ($validation->fails()) {
                 return $this->sendError("Validation Error", 403);
@@ -241,7 +242,7 @@ class OrderContoller extends BaseController
                 return $this->sendError("Order not found", 404);
             }
 
-            if (!in_array($request->status ,['preparing', 'out_for_delivery', 'delivered'])) {
+            if (!in_array($request->status, ['preparing', 'out_for_delivery', 'delivered'])) {
                 return $this->sendError("Unable to change status to $request->status", 502);
             }
 
