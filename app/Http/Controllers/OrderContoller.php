@@ -204,11 +204,13 @@ class OrderContoller extends BaseController
                 return $this->sendError("A delivered order cannot be canceled.", 502);
             }
 
-            $razorpayApi = new Api(Config::get('razorpay.key'), Config::get('razorpay.secret'));
-            $razorpayApi->payment->fetch($order->payment_id)->refund(['amount' => $order->receipt->amount]);
+            if ($order->payment_type != 'cash') {
+                $razorpayApi = new Api(Config::get('razorpay.key'), Config::get('razorpay.secret'));
+                $razorpayApi->payment->fetch($order->payment_id)->refund(['amount' => $order->receipt->amount]);
+                $order->payment_status = 'refund';
+            }
 
             $order->status = 'cancelled';
-            $order->payment_status = 'refund';
             $order->save();
 
             return $this->sendSuccess([], "Order successfully cancelled.");
@@ -253,7 +255,7 @@ class OrderContoller extends BaseController
             $order->status = $request->status;
             $order->save();
 
-            return $this->sendSuccess([], "Order successfully cancelled.");
+            return $this->sendSuccess([], "Order successfully changed.");
         } catch (\Throwable $th) {
             return $this->sendError("Server Error", 500);
         }
