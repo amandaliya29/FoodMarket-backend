@@ -132,14 +132,14 @@ class OrderContoller extends BaseController
 
             $order->payment_type = 'online';
             $valid_status = Config::get('razorpay.webhooks.valid_status');
-            $order->payment_status = $entity->status == $valid_status ? 'success' : 'failed';
-            $order->method = $entity->method;
-            $order->payment_id = $entity->id;
-            $order->card_id = $entity->card_id;
-            $order->bank = $entity->bank;
-            $order->vpa = $entity->vpa;
+            $order->payment_status = $entity['status'] == $valid_status ? 'success' : 'failed';
+            $order->method = $entity['method'];
+            $order->payment_id = $entity['id'];
+            $order->card_id = $entity['card_id'];
+            $order->bank = $entity['bank'];
+            $order->vpa = $entity['vpa'];
             $order->upi_transaction_id = $entity['acquirer_data']['upi_transaction_id'];
-            $order->confirmed = 'confirmed';
+            $order->status = 'confirmed';
             $order->save();
 
             return $this->sendSuccess([], "Order successfully confirmed.");
@@ -179,12 +179,6 @@ class OrderContoller extends BaseController
     public function cancel(Request $request)
     {
         try {
-            // check is admin
-            $user = Auth::user();
-            if (!$user->is_admin) {
-                return $this->sendError("Unauthorized", 401);
-            }
-
             // validation
             $validation = Validator::make($request->all(), [
                 'order_id' => 'required|numeric',
