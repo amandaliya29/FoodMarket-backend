@@ -200,7 +200,11 @@ class OrderContoller extends BaseController
 
             if ($order->payment_type != 'cash') {
                 $razorpayApi = new Api(Config::get('razorpay.key'), Config::get('razorpay.secret'));
-                $razorpayApi->payment->fetch($order->payment_id)->refund(['amount' => $order->receipt->amount]);
+                $payment = $razorpayApi->payment->fetch($order->payment_id);
+
+                if ($payment['status'] === 'captured') {
+                    $payment->refund(['amount' => $order->receipt->amount]);
+                }
                 $order->payment_status = 'refund';
             }
 
